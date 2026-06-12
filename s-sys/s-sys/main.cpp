@@ -1,4 +1,4 @@
-#define __GTEST__ (1)
+//#define __GTEST__ (1)
 
 #ifdef __GTEST__
 
