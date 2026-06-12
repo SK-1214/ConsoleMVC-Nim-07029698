@@ -34,5 +34,4 @@ private:
     SampleRepository&                       repo_;
     std::chrono::steady_clock::time_point   lastTick_;
     std::unordered_map<std::string, double> timeResiduals_;  // 미완료 누적 시간(초)
-    std::unordered_map<std::string, double> yieldResiduals_; // 수율 미만 누적 생산량
 };

@@ -22,12 +22,8 @@ std::vector<ProductionEvent> AutoProductionService::tick() {
         if (cycles <= 0) continue;
         timeResiduals_[s.id] -= cycles * s.avgProductionTime;
 
-        // ② 수율 누적 → 정수 단위 생산량 확정
-        //    yield < 1 이면 여러 사이클에 걸쳐 소수부가 쌓여 1개가 완성됨
-        yieldResiduals_[s.id] += cycles * s.yield;
-        int delta = static_cast<int>(std::floor(yieldResiduals_[s.id]));
-        if (delta <= 0) continue;
-        yieldResiduals_[s.id] -= delta;
+        // ② avgProductionTime 1사이클 = 1개 생산 (yield 미적용)
+        int delta = cycles;
 
         repo_.updateStock(s.id, delta);
         events.push_back({ s.id, s.name, delta });
