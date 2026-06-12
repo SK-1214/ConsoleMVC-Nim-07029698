@@ -1,3 +1,19 @@
+#ifdef __GTEST__
+
+// ─── GTest 수행 환경 ──────────────────────────────────────────────────────────
+#include <gtest/gtest.h>
+#include <windows.h>
+
+int main(int argc, char* argv[]) {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+
+#else
+
+// ─── 일반 실행 환경 (MVC 메인 메뉴) ─────────────────────────────────────────────
 #include <iostream>
 #include <string>
 #include <windows.h>
@@ -23,19 +39,16 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    // --- Model ---
-    SampleRepository sampleRepo;
-    OrderRepository  orderRepo;
-    ProductionQueue  productionQueue;
+    SampleRepository     sampleRepo;
+    OrderRepository      orderRepo;
+    ProductionQueue      productionQueue;
 
-    // --- Controller ---
-    SampleController    sampleCtrl(sampleRepo);
-    OrderController     orderCtrl(orderRepo, sampleRepo, productionQueue);
-    MonitorController   monitorCtrl(orderRepo, sampleRepo);
+    SampleController     sampleCtrl(sampleRepo);
+    OrderController      orderCtrl(orderRepo, sampleRepo, productionQueue);
+    MonitorController    monitorCtrl(orderRepo, sampleRepo);
     ProductionController prodCtrl(productionQueue, orderRepo, sampleRepo);
-    ShipmentController  shipCtrl(orderRepo);
+    ShipmentController   shipCtrl(orderRepo);
 
-    // --- View ---
     MainView       mainView;
     SampleView     sampleView;
     OrderView      orderView;
@@ -48,7 +61,6 @@ int main() {
         mainView.displayMenu();
         switch (mainView.getChoice()) {
 
-        // ── 1. 시료 관리 ─────────────────────────────────────────
         case MainMenuChoice::SAMPLE_MANAGEMENT: {
             bool inMenu = true;
             while (inMenu) {
@@ -77,7 +89,6 @@ int main() {
             break;
         }
 
-        // ── 2. 주문 관리 ─────────────────────────────────────────
         case MainMenuChoice::ORDER_MANAGEMENT: {
             bool inMenu = true;
             while (inMenu) {
@@ -119,7 +130,6 @@ int main() {
             break;
         }
 
-        // ── 3. 모니터링 ──────────────────────────────────────────
         case MainMenuChoice::MONITORING: {
             for (auto status : { OrderStatus::RESERVED, OrderStatus::CONFIRMED,
                                   OrderStatus::PRODUCING, OrderStatus::RELEASE }) {
@@ -130,7 +140,6 @@ int main() {
             break;
         }
 
-        // ── 4. 출고 처리 ─────────────────────────────────────────
         case MainMenuChoice::SHIPMENT: {
             shipView.displayConfirmedOrders(shipCtrl.getConfirmedOrders());
             int orderId = shipView.inputOrderId();
@@ -141,7 +150,6 @@ int main() {
             break;
         }
 
-        // ── 5. 생산 라인 ─────────────────────────────────────────
         case MainMenuChoice::PRODUCTION_LINE: {
             bool inMenu = true;
             while (inMenu) {
@@ -161,7 +169,6 @@ int main() {
             break;
         }
 
-        // ── 0. 종료 ──────────────────────────────────────────────
         case MainMenuChoice::EXIT:
             std::cout << "\n시스템을 종료합니다.\n";
             running = false;
@@ -170,3 +177,5 @@ int main() {
     }
     return 0;
 }
+
+#endif // __GTEST__

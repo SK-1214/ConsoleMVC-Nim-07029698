@@ -50,6 +50,9 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="testcase\TC_Sample_CRUD.cpp">
+      <Filter>소스 파일\testcase</Filter>
+    </ClCompile>
     <ClCompile Include="data\SampleJsonRepository.cpp">
       <Filter>소스 파일\data</Filter>
     </ClCompile>
