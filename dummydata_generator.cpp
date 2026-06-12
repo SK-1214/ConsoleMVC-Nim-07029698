@@ -1,6 +1,7 @@
 // dummydata_generator.cpp
 // 반도체 시료(Sample) 더미 데이터 생성기
 // 사용법: 프로그램 실행 후 생성 개수 입력 → dummydata/ 폴더에 JSON 파일 저장
+// avgProductionTime 단위: 초 (300~10800초 / 5분~3시간)
 //
 // 컴파일 예시 (MSVC):
 //   cl /std:c++17 /EHsc dummydata_generator.cpp
@@ -19,19 +20,68 @@
 
 namespace fs = std::filesystem;
 
-// ─── 반도체 소재 풀 ───────────────────────────────────────────────────────────
+// ─── 반도체 생산라인 시료 이름 풀 ────────────────────────────────────────────
 
 static const std::vector<std::string> MATERIAL_NAMES = {
-    "AlGaN", "GaN", "SiC", "InP", "GaAs",
-    "InGaAs", "Si", "Ge", "ZnO", "HgCdTe",
-    "InGaN", "AlInN", "AlGaAs", "InGaP", "GaSb",
-    "InAs", "InSb", "AlN", "CdTe", "CdS",
-    "ZnS", "ZnSe", "GaP", "GaN-HV", "SiGe",
-    "Diamond", "Ga2O3", "BN", "AlGaN-UV", "InAlGaN",
-    "MoS2", "WSe2", "GaN-RF", "SiC-4H", "AlGaP",
-    "InAlAs", "GaInSb", "CdZnTe", "PbTe", "BiTe",
-    "GaN-LED", "AlInGaP", "InGaAsP", "GaInN", "AlGaInN",
-    "SiC-6H", "GaAs-HB", "InP-DHB", "ZnMgO", "CuInSe"
+    // 실리콘 웨이퍼 계열
+    "실리콘 웨이퍼 8인치",
+    "실리콘 웨이퍼 12인치",
+    "실리콘 웨이퍼 6인치",
+    "SOI 웨이퍼 12인치",
+    "에피택셜 실리콘 웨이퍼 12인치",
+    // 최신 공정 웨이퍼
+    "GAA 공정 웨이퍼 12인치",
+    "FinFET 공정 웨이퍼 12인치",
+    "EUV 노광 웨이퍼 12인치",
+    "3nm 공정 웨이퍼 12인치",
+    "5nm 공정 웨이퍼 12인치",
+    "7nm 공정 웨이퍼 12인치",
+    // 메모리 계열
+    "DRAM DDR5 웨이퍼 12인치",
+    "LPDDR5 모바일 DRAM 웨이퍼 12인치",
+    "NAND Flash 176단 웨이퍼 12인치",
+    "NAND Flash 238단 웨이퍼 12인치",
+    "HBM3 웨이퍼 12인치",
+    "HBM3E 웨이퍼 12인치",
+    // 파워 반도체 계열
+    "SiC 파워 웨이퍼 6인치",
+    "SiC 파워 웨이퍼 8인치",
+    "GaN-on-Si 파워 웨이퍼 8인치",
+    "고전압 MOSFET 웨이퍼 8인치",
+    "IGBT 파워 모듈 웨이퍼 8인치",
+    // 화합물 반도체 계열
+    "GaAs RF 웨이퍼 6인치",
+    "InP 고속 소자 웨이퍼 4인치",
+    "GaN RF 웨이퍼 6인치",
+    "AlGaN/GaN HEMT 웨이퍼 6인치",
+    // 광반도체 계열
+    "CIS 이미지센서 웨이퍼 8인치",
+    "ToF 센서 웨이퍼 8인치",
+    "InGaAs 적외선 센서 웨이퍼 4인치",
+    "VCSEL 레이저 웨이퍼 6인치",
+    // SoC / 로직 계열
+    "모바일 AP 웨이퍼 12인치",
+    "AI 가속기 웨이퍼 12인치",
+    "자동차용 MCU 웨이퍼 8인치",
+    "BCD 아날로그 혼성신호 웨이퍼 8인치",
+    "eFlash MCU 웨이퍼 8인치",
+    // 패키징 기반 계열
+    "TSV 인터포저 웨이퍼 12인치",
+    "Fan-out WLP 웨이퍼 12인치",
+    "2.5D 칩렛 인터포저 웨이퍼 12인치",
+    // 디스플레이 구동 계열
+    "OLED 드라이버 IC 웨이퍼 8인치",
+    "AMOLED DDI 웨이퍼 8인치",
+    // 기타 특수 공정
+    "MEMS 압력센서 웨이퍼 8인치",
+    "RF CMOS 웨이퍼 12인치",
+    "BiCMOS SiGe 웨이퍼 8인치",
+    "고저항 실리콘 RF 웨이퍼 12인치",
+    "FD-SOI 28nm 웨이퍼 12인치",
+    "질화갈륨 LED 웨이퍼 4인치",
+    "마이크로 LED 웨이퍼 6인치",
+    "SiPh 실리콘 포토닉스 웨이퍼 12인치",
+    "양자점 QD-LED 웨이퍼 8인치"
 };
 
 // ─── 유틸리티 ─────────────────────────────────────────────────────────────────
@@ -46,7 +96,7 @@ static std::string makeFilename(const std::string& id, const std::string& name) 
     // 파일명에 사용할 수 없는 문자 치환
     std::string safeName = name;
     for (char& c : safeName) {
-        if (c == '/' || c == '\\' || c == ':' || c == '*' ||
+        if (c == ' ' || c == '/' || c == '\\' || c == ':' || c == '*' ||
             c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
             c = '_';
     }
@@ -88,7 +138,7 @@ int main() {
 
     // 난수 엔진 초기화
     std::mt19937 rng(static_cast<unsigned>(std::time(nullptr)));
-    std::uniform_int_distribution<int>    distTime(10, 90);   // 생산시간 10~90분
+    std::uniform_int_distribution<int>    distTime(300, 10800); // 생산시간 300~10800초 (5분~3시간)
     std::uniform_real_distribution<double> distYield(0.50, 1.00); // 수율 0.50~1.00
     std::uniform_int_distribution<int>    distStock(0, 500);  // 재고 0~500
 
@@ -105,7 +155,7 @@ int main() {
         }
 
         std::string id       = makeId(i);
-        int   time           = distTime(rng);
+        int   time           = distTime(rng);          // 초 단위
         double yieldVal      = std::round(distYield(rng) * 100.0) / 100.0;
         int   stock          = distStock(rng);
 
