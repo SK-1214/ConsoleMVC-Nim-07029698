@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <windows.h>
 
 #include "model/SampleRepository.h"
 #include "model/OrderRepository.h"
@@ -19,6 +20,9 @@
 #include "view/ShipmentView.h"
 
 int main() {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     // --- Model ---
     SampleRepository sampleRepo;
     OrderRepository  orderRepo;
