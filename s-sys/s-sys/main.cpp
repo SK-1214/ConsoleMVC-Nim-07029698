@@ -70,18 +70,30 @@ static const std::vector<std::string> MATERIAL_NAMES = {
 
 // ─── 유틸리티 ─────────────────────────────────────────────────────────────────
 
+// UTF-8 std::string → std::wstring (Windows 파일 경로용)
+static std::wstring toWide(const std::string& utf8) {
+    if (utf8.empty()) return {};
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, nullptr, 0);
+    std::wstring wstr(wlen - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, wstr.data(), wlen);
+    return wstr;
+}
+
 static std::string makeId(int index) {
     std::ostringstream oss;
     oss << "S" << std::setw(3) << std::setfill('0') << index;
     return oss.str();
 }
 
+// 파일명 금지 문자 → '_' 치환 (ASCII 범위만 처리, 한글 멀티바이트는 그대로 유지)
 static std::string makeSafeFilename(const std::string& id, const std::string& name) {
     std::string safe = name;
     for (char& c : safe) {
-        if (c == ' ' || c == '/' || c == '\\' || c == ':' ||
-            c == '*' || c == '?' || c == '"' || c == '<' ||
-            c == '>' || c == '|')
+        // ASCII 범위만 검사 (한글 멀티바이트 바이트는 상위 비트가 1이므로 건드리지 않음)
+        if (static_cast<unsigned char>(c) < 0x80 &&
+            (c == ' ' || c == '/' || c == '\\' || c == ':' ||
+             c == '*'  || c == '?' || c == '"'  || c == '<' ||
+             c == '>'  || c == '|'))
             c = '_';
     }
     return id + "_" + safe + ".json";
@@ -106,7 +118,7 @@ int main() {
         return 1;
     }
 
-    const fs::path outDir = "dummydata";
+    const fs::path outDir = fs::path(L"dummydata");
     fs::create_directories(outDir);
 
     std::mt19937 rng(static_cast<unsigned>(std::time(nullptr)));
@@ -135,21 +147,23 @@ int main() {
         j["yield"]              = yieldVal;
         j["stock"]              = stock;
 
-        fs::path filePath = outDir / makeSafeFilename(id, name);
-        std::ofstream ofs(filePath);
+        // 한글 포함 경로는 wstring으로 변환하여 MSVC 파일스트림에 전달
+        std::string   filenameUtf8 = makeSafeFilename(id, name);
+        fs::path      filePath     = outDir / fs::path(toWide(filenameUtf8));
+        std::ofstream ofs(filePath.wstring());
         if (!ofs.is_open()) {
-            std::cerr << "파일 열기 실패: " << filePath << "\n";
+            std::cerr << "파일 열기 실패: " << filenameUtf8 << "\n";
             continue;
         }
         ofs << j.dump(2);
         ofs.close();
 
         std::cout << "[" << std::setw(3) << i << "/" << count << "] "
-                  << filePath.string() << "\n";
+                  << filenameUtf8 << "\n";
         ++generated;
     }
 
     std::cout << "\n완료: 총 " << generated << "개의 시료 데이터가 "
-              << fs::absolute(outDir).string() << " 에 저장됐습니다.\n";
+              << "dummydata" << " 폴더에 저장됐습니다.\n";
     return 0;
 }
