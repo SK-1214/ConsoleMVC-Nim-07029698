@@ -1,172 +1,112 @@
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <vector>
 #include <string>
+#include <algorithm>
+#include <iomanip>
 #include <windows.h>
+#include "nlohmann/json.hpp"
 
-#include "model/SampleRepository.h"
-#include "model/OrderRepository.h"
-#include "model/ProductionQueue.h"
+namespace fs = std::filesystem;
+using json = nlohmann::json;
 
-#include "controller/SampleController.h"
-#include "controller/OrderController.h"
-#include "controller/MonitorController.h"
-#include "controller/ProductionController.h"
-#include "controller/ShipmentController.h"
+struct SampleData {
+    std::string id;
+    std::string name;
+    int         avgProductionTime = 0;
+    double      yield             = 0.0;
+    int         stock             = 0;
+};
 
-#include "view/MainView.h"
-#include "view/SampleView.h"
-#include "view/OrderView.h"
-#include "view/MonitorView.h"
-#include "view/ProductionView.h"
-#include "view/ShipmentView.h"
+// UTF-8 std::string → std::wstring
+static std::wstring toWide(const std::string& utf8) {
+    if (utf8.empty()) return {};
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, nullptr, 0);
+    std::wstring ws(wlen - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, ws.data(), wlen);
+    return ws;
+}
+
+// sampledata/ 폴더의 모든 .json 파일을 읽어 SampleData 목록 반환
+static std::vector<SampleData> loadSamples(const fs::path& dir) {
+    std::vector<SampleData> list;
+
+    if (!fs::exists(dir) || !fs::is_directory(dir)) return list;
+
+    std::vector<fs::path> files;
+    for (const auto& entry : fs::directory_iterator(dir)) {
+        if (entry.path().extension() == L".json")
+            files.push_back(entry.path());
+    }
+    std::sort(files.begin(), files.end());
+
+    for (const auto& path : files) {
+        std::ifstream ifs(path.wstring().c_str());
+        if (!ifs.is_open()) continue;
+
+        try {
+            json j = json::parse(ifs);
+            SampleData s;
+            s.id                 = j.value("id",                 "");
+            s.name               = j.value("name",               "");
+            s.avgProductionTime  = j.value("avgProductionTime",  0);
+            s.yield              = j.value("yield",              0.0);
+            s.stock              = j.value("stock",              0);
+            list.push_back(s);
+        } catch (...) {
+            std::cerr << "파싱 실패: " << path.filename() << "\n";
+        }
+    }
+    return list;
+}
+
+static void printTable(const std::vector<SampleData>& samples) {
+    if (samples.empty()) {
+        std::cout << "  조회된 시료 데이터가 없습니다.\n";
+        return;
+    }
+
+    const std::string sep(82, '-');
+    std::cout << sep << "\n";
+    std::cout << std::left
+              << std::setw(8)  << "ID"
+              << std::setw(36) << "시료명"
+              << std::setw(14) << "생산시간(초)"
+              << std::setw(10) << "수율"
+              << std::setw(8)  << "재고"
+              << "\n";
+    std::cout << sep << "\n";
+
+    for (const auto& s : samples) {
+        std::cout << std::left
+                  << std::setw(8)  << s.id
+                  << std::setw(36) << s.name
+                  << std::setw(14) << s.avgProductionTime
+                  << std::setw(10) << std::fixed << std::setprecision(2) << s.yield
+                  << std::setw(8)  << s.stock
+                  << "\n";
+    }
+    std::cout << sep << "\n";
+    std::cout << "  총 " << samples.size() << "개의 시료 데이터\n";
+}
 
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    // --- Model ---
-    SampleRepository sampleRepo;
-    OrderRepository  orderRepo;
-    ProductionQueue  productionQueue;
+    const fs::path sampleDir = fs::path(L"sampledata");
 
-    // --- Controller ---
-    SampleController    sampleCtrl(sampleRepo);
-    OrderController     orderCtrl(orderRepo, sampleRepo, productionQueue);
-    MonitorController   monitorCtrl(orderRepo, sampleRepo);
-    ProductionController prodCtrl(productionQueue, orderRepo, sampleRepo);
-    ShipmentController  shipCtrl(orderRepo);
+    std::cout << "========================================\n";
+    std::cout << "  S-Semi 샘플 데이터 모니터\n";
+    std::cout << "========================================\n\n";
 
-    // --- View ---
-    MainView       mainView;
-    SampleView     sampleView;
-    OrderView      orderView;
-    MonitorView    monitorView;
-    ProductionView prodView;
-    ShipmentView   shipView;
+    std::cout << "sampledata/ 폴더에서 시료 데이터를 불러오는 중...\n\n";
 
-    bool running = true;
-    while (running) {
-        mainView.displayMenu();
-        switch (mainView.getChoice()) {
+    auto samples = loadSamples(sampleDir);
+    printTable(samples);
 
-        // ── 1. 시료 관리 ─────────────────────────────────────────
-        case MainMenuChoice::SAMPLE_MANAGEMENT: {
-            bool inMenu = true;
-            while (inMenu) {
-                sampleView.displayMenu();
-                switch (sampleView.getChoice()) {
-                case SampleMenuChoice::REGISTER: {
-                    auto s  = sampleView.inputSampleData();
-                    bool ok = sampleCtrl.registerSample(s.id, s.name,
-                                                        s.avgProductionTime, s.yield);
-                    sampleView.displayResult(ok, ok ? "등록 완료" : "등록 실패 (중복 ID 또는 잘못된 값)");
-                    break;
-                }
-                case SampleMenuChoice::LIST:
-                    sampleView.displaySamples(sampleCtrl.getAllSamples());
-                    break;
-                case SampleMenuChoice::SEARCH: {
-                    auto name = sampleView.inputSearchName();
-                    sampleView.displaySamples(sampleCtrl.searchByName(name));
-                    break;
-                }
-                case SampleMenuChoice::BACK:
-                    inMenu = false;
-                    break;
-                }
-            }
-            break;
-        }
-
-        // ── 2. 주문 관리 ─────────────────────────────────────────
-        case MainMenuChoice::ORDER_MANAGEMENT: {
-            bool inMenu = true;
-            while (inMenu) {
-                orderView.displayMenu();
-                switch (orderView.getChoice()) {
-                case OrderMenuChoice::PLACE: {
-                    auto input = orderView.inputOrderData();
-                    int  id    = orderCtrl.placeOrder(input.sampleId,
-                                                       input.customerName, input.quantity);
-                    orderView.displayResult(id > 0,
-                        id > 0 ? "주문 접수 완료 (주문 ID: " + std::to_string(id) + ")"
-                               : "주문 실패 (미등록 시료 또는 잘못된 수량)");
-                    break;
-                }
-                case OrderMenuChoice::APPROVE_REJECT: {
-                    orderView.displayOrders(orderCtrl.getReservedOrders());
-                    int orderId = orderView.inputOrderId();
-                    switch (orderView.getApproveRejectChoice()) {
-                    case ApproveRejectChoice::APPROVE: {
-                        bool ok = orderCtrl.approveOrder(orderId);
-                        orderView.displayResult(ok, ok ? "주문 승인 완료" : "승인 실패");
-                        break;
-                    }
-                    case ApproveRejectChoice::REJECT: {
-                        bool ok = orderCtrl.rejectOrder(orderId);
-                        orderView.displayResult(ok, ok ? "주문 거절 완료" : "거절 실패");
-                        break;
-                    }
-                    case ApproveRejectChoice::BACK:
-                        break;
-                    }
-                    break;
-                }
-                case OrderMenuChoice::BACK:
-                    inMenu = false;
-                    break;
-                }
-            }
-            break;
-        }
-
-        // ── 3. 모니터링 ──────────────────────────────────────────
-        case MainMenuChoice::MONITORING: {
-            for (auto status : { OrderStatus::RESERVED, OrderStatus::CONFIRMED,
-                                  OrderStatus::PRODUCING, OrderStatus::RELEASE }) {
-                monitorView.displayOrdersByStatus(
-                    monitorCtrl.getOrdersByStatus(status), status);
-            }
-            monitorView.displayStockInfo(monitorCtrl.getStockInfo());
-            break;
-        }
-
-        // ── 4. 출고 처리 ─────────────────────────────────────────
-        case MainMenuChoice::SHIPMENT: {
-            shipView.displayConfirmedOrders(shipCtrl.getConfirmedOrders());
-            int orderId = shipView.inputOrderId();
-            if (orderId > 0) {
-                bool ok = shipCtrl.release(orderId);
-                shipView.displayResult(ok, ok ? "출고 완료 (RELEASE)" : "출고 실패");
-            }
-            break;
-        }
-
-        // ── 5. 생산 라인 ─────────────────────────────────────────
-        case MainMenuChoice::PRODUCTION_LINE: {
-            bool inMenu = true;
-            while (inMenu) {
-                prodView.displayCurrentProduction(prodCtrl.getCurrentProduction());
-                prodView.displayWaitingQueue(prodCtrl.getWaitingJobs());
-                switch (prodView.getChoice()) {
-                case ProductionMenuChoice::COMPLETE: {
-                    bool ok = prodCtrl.completeCurrentProduction();
-                    prodView.displayResult(ok, ok ? "생산 완료 (CONFIRMED 전환)" : "생산 중인 작업 없음");
-                    break;
-                }
-                case ProductionMenuChoice::BACK:
-                    inMenu = false;
-                    break;
-                }
-            }
-            break;
-        }
-
-        // ── 0. 종료 ──────────────────────────────────────────────
-        case MainMenuChoice::EXIT:
-            std::cout << "\n시스템을 종료합니다.\n";
-            running = false;
-            break;
-        }
-    }
+    std::cout << "\n아무 키나 누르면 종료합니다...";
+    std::cin.get();
     return 0;
 }
