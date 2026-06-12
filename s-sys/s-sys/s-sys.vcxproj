@@ -77,6 +77,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -95,6 +96,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -111,6 +113,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,6 +132,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,9 +142,59 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
+
+  <!-- Source files -->
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <!-- model -->
+    <ClCompile Include="model\Order.cpp" />
+    <ClCompile Include="model\StockInfo.cpp" />
+    <ClCompile Include="model\SampleRepository.cpp" />
+    <ClCompile Include="model\OrderRepository.cpp" />
+    <ClCompile Include="model\ProductionQueue.cpp" />
+    <!-- controller -->
+    <ClCompile Include="controller\SampleController.cpp" />
+    <ClCompile Include="controller\OrderController.cpp" />
+    <ClCompile Include="controller\MonitorController.cpp" />
+    <ClCompile Include="controller\ProductionController.cpp" />
+    <ClCompile Include="controller\ShipmentController.cpp" />
+    <!-- view -->
+    <ClCompile Include="view\MainView.cpp" />
+    <ClCompile Include="view\SampleView.cpp" />
+    <ClCompile Include="view\OrderView.cpp" />
+    <ClCompile Include="view\MonitorView.cpp" />
+    <ClCompile Include="view\ProductionView.cpp" />
+    <ClCompile Include="view\ShipmentView.cpp" />
+  </ItemGroup>
+
+  <!-- Header files -->
+  <ItemGroup>
+    <!-- model -->
+    <ClInclude Include="model\Sample.h" />
+    <ClInclude Include="model\Order.h" />
+    <ClInclude Include="model\StockInfo.h" />
+    <ClInclude Include="model\SampleRepository.h" />
+    <ClInclude Include="model\OrderRepository.h" />
+    <ClInclude Include="model\ProductionQueue.h" />
+    <!-- controller -->
+    <ClInclude Include="controller\SampleController.h" />
+    <ClInclude Include="controller\OrderController.h" />
+    <ClInclude Include="controller\MonitorController.h" />
+    <ClInclude Include="controller\ProductionController.h" />
+    <ClInclude Include="controller\ShipmentController.h" />
+    <!-- view -->
+    <ClInclude Include="view\MainView.h" />
+    <ClInclude Include="view\SampleView.h" />
+    <ClInclude Include="view\OrderView.h" />
+    <ClInclude Include="view\MonitorView.h" />
+    <ClInclude Include="view\ProductionView.h" />
+    <ClInclude Include="view\ShipmentView.h" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-static.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-static.targets" Condition="Exists('..\packages\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-static.1.8.1.8\build\native\Microsoft.googletest.v140.windesktop.msvcstl.static.rt-static.targets')" />

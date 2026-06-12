@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="소스 파일">
@@ -13,7 +13,136 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\model">
+      <UniqueIdentifier>{A1B2C3D4-0001-0001-0001-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\controller">
+      <UniqueIdentifier>{A1B2C3D4-0002-0002-0002-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\view">
+      <UniqueIdentifier>{A1B2C3D4-0003-0003-0003-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\model">
+      <UniqueIdentifier>{A1B2C3D4-0004-0004-0004-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\controller">
+      <UniqueIdentifier>{A1B2C3D4-0005-0005-0005-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\view">
+      <UniqueIdentifier>{A1B2C3D4-0006-0006-0006-000000000006}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
+
+  <!-- Source files -->
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="model\Order.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="model\StockInfo.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="model\SampleRepository.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="model\OrderRepository.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="model\ProductionQueue.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
+    <ClCompile Include="controller\SampleController.cpp">
+      <Filter>소스 파일\controller</Filter>
+    </ClCompile>
+    <ClCompile Include="controller\OrderController.cpp">
+      <Filter>소스 파일\controller</Filter>
+    </ClCompile>
+    <ClCompile Include="controller\MonitorController.cpp">
+      <Filter>소스 파일\controller</Filter>
+    </ClCompile>
+    <ClCompile Include="controller\ProductionController.cpp">
+      <Filter>소스 파일\controller</Filter>
+    </ClCompile>
+    <ClCompile Include="controller\ShipmentController.cpp">
+      <Filter>소스 파일\controller</Filter>
+    </ClCompile>
+    <ClCompile Include="view\MainView.cpp">
+      <Filter>소스 파일\view</Filter>
+    </ClCompile>
+    <ClCompile Include="view\SampleView.cpp">
+      <Filter>소스 파일\view</Filter>
+    </ClCompile>
+    <ClCompile Include="view\OrderView.cpp">
+      <Filter>소스 파일\view</Filter>
+    </ClCompile>
+    <ClCompile Include="view\MonitorView.cpp">
+      <Filter>소스 파일\view</Filter>
+    </ClCompile>
+    <ClCompile Include="view\ProductionView.cpp">
+      <Filter>소스 파일\view</Filter>
+    </ClCompile>
+    <ClCompile Include="view\ShipmentView.cpp">
+      <Filter>소스 파일\view</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- Header files -->
+  <ItemGroup>
+    <ClInclude Include="model\Sample.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\Order.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\StockInfo.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\SampleRepository.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\OrderRepository.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="model\ProductionQueue.h">
+      <Filter>헤더 파일\model</Filter>
+    </ClInclude>
+    <ClInclude Include="controller\SampleController.h">
+      <Filter>헤더 파일\controller</Filter>
+    </ClInclude>
+    <ClInclude Include="controller\OrderController.h">
+      <Filter>헤더 파일\controller</Filter>
+    </ClInclude>
+    <ClInclude Include="controller\MonitorController.h">
+      <Filter>헤더 파일\controller</Filter>
+    </ClInclude>
+    <ClInclude Include="controller\ProductionController.h">
+      <Filter>헤더 파일\controller</Filter>
+    </ClInclude>
+    <ClInclude Include="controller\ShipmentController.h">
+      <Filter>헤더 파일\controller</Filter>
+    </ClInclude>
+    <ClInclude Include="view\MainView.h">
+      <Filter>헤더 파일\view</Filter>
+    </ClInclude>
+    <ClInclude Include="view\SampleView.h">
+      <Filter>헤더 파일\view</Filter>
+    </ClInclude>
+    <ClInclude Include="view\OrderView.h">
+      <Filter>헤더 파일\view</Filter>
+    </ClInclude>
+    <ClInclude Include="view\MonitorView.h">
+      <Filter>헤더 파일\view</Filter>
+    </ClInclude>
+    <ClInclude Include="view\ProductionView.h">
+      <Filter>헤더 파일\view</Filter>
+    </ClInclude>
+    <ClInclude Include="view\ShipmentView.h">
+      <Filter>헤더 파일\view</Filter>
+    </ClInclude>
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
