@@ -4,9 +4,12 @@
 #include <optional>
 #include <unordered_map>
 #include "Sample.h"
+#include "data/SampleJsonRepository.h"
 
 class SampleRepository {
 public:
+    explicit SampleRepository(const std::string& dir = "sampledata");
+
     bool add(const Sample& sample);
     bool exists(const std::string& id) const;
     std::optional<Sample> findById(const std::string& id) const;
@@ -16,5 +19,8 @@ public:
     int  getStock(const std::string& id) const;
 
 private:
+    SampleJsonRepository                    json_;
     std::unordered_map<std::string, Sample> samples_;
+
+    void loadFromJson();
 };

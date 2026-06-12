@@ -1,6 +1,34 @@
 #include "view/SampleView.h"
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
+#include <sstream>
+#include <string>
+
+// UTF-8 표시 너비: 한글/CJK = 2칸, ASCII = 1칸
+static int dispWidth(const std::string& s) {
+    int w = 0;
+    size_t i = 0;
+    while (i < s.size()) {
+        unsigned char c = static_cast<unsigned char>(s[i]);
+        if      (c < 0x80) { w += 1; i += 1; }
+        else if (c < 0xE0) { w += 2; i += 2; }
+        else if (c < 0xF0) { w += 2; i += 3; }
+        else               { w += 2; i += 4; }
+    }
+    return w;
+}
+
+static std::string padR(const std::string& s, int col) {
+    int pad = std::max(0, col - dispWidth(s));
+    return s + std::string(pad, ' ');
+}
+
+static std::string padNumR(int n, int col) {
+    std::string s = std::to_string(n);
+    int pad = std::max(0, col - static_cast<int>(s.size()));
+    return std::string(pad, ' ') + s;
+}
 
 void SampleView::displayMenu() const {
     std::cout << "\n--- 시료 관리 ---\n";
@@ -29,7 +57,7 @@ Sample SampleView::inputSampleData() const {
     std::cin >> s.id;
     std::cout << "이름: ";
     std::cin >> s.name;
-    std::cout << "평균 생산 시간 (정수): ";
+    std::cout << "생산 시간(정수): ";
     std::cin >> s.avgProductionTime;
     std::cout << "수율 (0.0~1.0): ";
     std::cin >> s.yield;
@@ -50,21 +78,33 @@ void SampleView::displaySamples(const std::vector<Sample>& samples) const {
         std::cout << "  (등록된 시료 없음)\n";
         return;
     }
-    std::cout << "\n"
-              << std::left
-              << std::setw(10) << "ID"
-              << std::setw(16) << "이름"
-              << std::setw(12) << "생산시간"
-              << std::setw(8)  << "수율"
-              << std::setw(8)  << "재고"
+
+    constexpr int W_ID   =  8;   // "S001    "
+    constexpr int W_NAME = 34;   // 최장 소재명 수용
+    constexpr int W_TIME = 12;   // 생산시간(초)
+    constexpr int W_YILD =  8;   // 수율
+    constexpr int W_STK  =  6;   // 재고
+    constexpr int TOTAL  = W_ID + W_NAME + W_TIME + W_YILD + W_STK + 4;
+
+    std::cout << '\n'
+              << padR("시료ID",   W_ID)   << " "
+              << padR("이름",     W_NAME)  << " "
+              << padR("생산시간", W_TIME)  << " "
+              << padR("수율",     W_YILD)  << " "
+              << padR("재고",     W_STK)
               << '\n';
-    std::cout << std::string(54, '-') << '\n';
+    std::cout << std::string(TOTAL, '-') << '\n';
+
     for (const auto& s : samples) {
-        std::cout << std::setw(10) << s.id
-                  << std::setw(16) << s.name
-                  << std::setw(12) << s.avgProductionTime
-                  << std::setw(8)  << s.yield
-                  << std::setw(8)  << s.stock
+        // 수율: 소수점 2자리 고정 표현
+        std::ostringstream yieldStr;
+        yieldStr << std::fixed << std::setprecision(2) << s.yield;
+
+        std::cout << padR(s.id,           W_ID)   << " "
+                  << padR(s.name,         W_NAME)  << " "
+                  << padNumR(s.avgProductionTime, W_TIME) << " "
+                  << padR(yieldStr.str(), W_YILD)  << " "
+                  << padNumR(s.stock,     W_STK)
                   << '\n';
     }
 }

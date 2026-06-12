@@ -1,7 +1,21 @@
-#include "SampleRepository.h"
+#include "model/SampleRepository.h"
+#include <algorithm>
+
+SampleRepository::SampleRepository(const std::string& dir)
+    : json_(dir)
+{
+    loadFromJson();
+}
+
+void SampleRepository::loadFromJson() {
+    samples_.clear();
+    for (const auto& s : json_.getAll())
+        samples_[s.id] = s;
+}
 
 bool SampleRepository::add(const Sample& sample) {
     if (exists(sample.id)) return false;
+    if (!json_.add(sample)) return false;
     samples_[sample.id] = sample;
     return true;
 }
@@ -30,6 +44,8 @@ std::vector<Sample> SampleRepository::getAll() const {
     result.reserve(samples_.size());
     for (const auto& [id, s] : samples_)
         result.push_back(s);
+    std::sort(result.begin(), result.end(),
+        [](const Sample& a, const Sample& b){ return a.id < b.id; });
     return result;
 }
 
@@ -38,6 +54,7 @@ bool SampleRepository::updateStock(const std::string& id, int delta) {
     if (it == samples_.end()) return false;
     it->second.stock += delta;
     if (it->second.stock < 0) it->second.stock = 0;
+    json_.updateStock(id, delta);
     return true;
 }
 
