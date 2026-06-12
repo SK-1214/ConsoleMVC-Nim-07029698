@@ -47,6 +47,9 @@
     <ClCompile Include="data\SampleJsonRepository.cpp">
       <Filter>소스 파일\data</Filter>
     </ClCompile>
+    <ClCompile Include="data\SampleJsonRepository_test.cpp">
+      <Filter>소스 파일\data</Filter>
+    </ClCompile>
     <ClCompile Include="model\Order.cpp">
       <Filter>소스 파일\model</Filter>
     </ClCompile>
