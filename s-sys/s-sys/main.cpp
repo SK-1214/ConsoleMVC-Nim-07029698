@@ -23,6 +23,7 @@ int main(int argc, char* argv[]) {
 #include "model/SampleRepository.h"
 #include "model/OrderRepository.h"
 #include "model/ProductionQueue.h"
+#include "model/AutoProductionService.h"
 
 #include "controller/SampleController.h"
 #include "controller/OrderController.h"
@@ -41,9 +42,10 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    SampleRepository     sampleRepo;
-    OrderRepository      orderRepo;
-    ProductionQueue      productionQueue;
+    SampleRepository       sampleRepo;
+    OrderRepository        orderRepo;
+    ProductionQueue        productionQueue;
+    AutoProductionService  autoProduction(sampleRepo);
 
     SampleController     sampleCtrl(sampleRepo);
     OrderController      orderCtrl(orderRepo, sampleRepo, productionQueue);
@@ -60,6 +62,11 @@ int main() {
 
     bool running = true;
     while (running) {
+        // 메뉴 선택 전 경과 시간만큼 재고 자동 생산
+        for (const auto& ev : autoProduction.tick())
+            std::cout << "[자동생산] " << ev.sampleId << " " << ev.sampleName
+                      << "  +" << ev.unitsProduced << "개\n";
+
         mainView.displayMenu();
         switch (mainView.getChoice()) {
 

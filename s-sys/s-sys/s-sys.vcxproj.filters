@@ -59,6 +59,9 @@
     <ClCompile Include="data\SampleJsonRepository_test.cpp">
       <Filter>소스 파일\data</Filter>
     </ClCompile>
+    <ClCompile Include="model\AutoProductionService.cpp">
+      <Filter>소스 파일\model</Filter>
+    </ClCompile>
     <ClCompile Include="model\Order.cpp">
       <Filter>소스 파일\model</Filter>
     </ClCompile>
@@ -116,6 +119,9 @@
     </ClInclude>
     <ClInclude Include="nlohmann\json.hpp">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="model\AutoProductionService.h">
+      <Filter>헤더 파일\model</Filter>
     </ClInclude>
     <ClInclude Include="model\Sample.h">
       <Filter>헤더 파일\model</Filter>
