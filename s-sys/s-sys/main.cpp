@@ -1,4 +1,4 @@
-//#define __GTEST__ (1)
+#define __GTEST__ (1)
 
 #ifdef __GTEST__
 
@@ -62,10 +62,22 @@ int main() {
 
     bool running = true;
     while (running) {
-        // 메뉴 선택 전 경과 시간만큼 재고 자동 생산
+        // ① 재고 자동 생산 (타이머)
         for (const auto& ev : autoProduction.tick())
             std::cout << "[자동생산] " << ev.sampleId << " " << ev.sampleName
                       << "  +" << ev.unitsProduced << "개\n";
+
+        // ② 생산 라인 큐 자동 완료 (totalTime 경과 시)
+        if (auto done = prodCtrl.tickProduction()) {
+            std::cout << "[생산완료] 주문 #" << done->orderId
+                      << "  시료 " << done->sampleId
+                      << "  +" << done->actualQty << "개 → CONFIRMED\n";
+            // 대기 큐에 다음 작업이 있으면 자동 시작 알림
+            if (auto next = prodCtrl.getCurrentProduction())
+                std::cout << "[생산시작] 주문 #" << next->orderId
+                          << "  시료 " << next->sampleId
+                          << "  생산 시작 (총 " << next->totalTime << "초)\n";
+        }
 
         mainView.displayMenu();
         switch (mainView.getChoice()) {
@@ -117,8 +129,27 @@ int main() {
                     int orderId = orderView.inputOrderId();
                     switch (orderView.getApproveRejectChoice()) {
                     case ApproveRejectChoice::APPROVE: {
+                        // 승인 전 생산 라인 상태 스냅샷
+                        bool hadRunning = prodCtrl.getCurrentProduction().has_value();
                         bool ok = orderCtrl.approveOrder(orderId);
-                        orderView.displayResult(ok, ok ? "주문 승인 완료" : "승인 실패");
+                        if (ok) {
+                            auto currJob = prodCtrl.getCurrentProduction();
+                            int  waiting = static_cast<int>(prodCtrl.getWaitingJobs().size());
+                            if (!currJob) {
+                                // 재고 충분 → 즉시 CONFIRMED
+                                orderView.displayResult(ok, "주문 승인 완료 (재고 충분 → CONFIRMED)");
+                            } else if (hadRunning) {
+                                // 이미 생산 중 → 대기 큐에 추가
+                                orderView.displayResult(ok,
+                                    "주문 승인 완료 → 대기 큐 추가 (현재 대기 " +
+                                    std::to_string(waiting) + "건, 앞 작업 완료 후 생산 시작)");
+                            } else {
+                                // 생산 라인 비어 있었음 → 즉시 생산 투입
+                                orderView.displayResult(ok, "주문 승인 완료 → 생산 라인 즉시 투입");
+                            }
+                        } else {
+                            orderView.displayResult(ok, "승인 실패");
+                        }
                         break;
                     }
                     case ApproveRejectChoice::REJECT: {
@@ -165,12 +196,23 @@ int main() {
         case MainMenuChoice::PRODUCTION_LINE: {
             bool inMenu = true;
             while (inMenu) {
-                prodView.displayCurrentProduction(prodCtrl.getCurrentProduction());
+                // 생산 라인 진입 시에도 자동 완료 체크
+                if (auto done = prodCtrl.tickProduction()) {
+                    std::cout << "[생산완료] 주문 #" << done->orderId
+                              << "  시료 " << done->sampleId
+                              << "  +" << done->actualQty << "개 → CONFIRMED\n";
+                    if (auto next = prodCtrl.getCurrentProduction())
+                        std::cout << "[생산시작] 주문 #" << next->orderId
+                                  << "  시료 " << next->sampleId
+                                  << "  생산 시작 (총 " << next->totalTime << "초)\n";
+                }
+
+                prodView.displayCurrentProduction(prodCtrl.getCurrentProductionProgress());
                 prodView.displayWaitingQueue(prodCtrl.getWaitingJobs());
                 switch (prodView.getChoice()) {
                 case ProductionMenuChoice::COMPLETE: {
                     bool ok = prodCtrl.completeCurrentProduction();
-                    prodView.displayResult(ok, ok ? "생산 완료 (CONFIRMED 전환)" : "생산 중인 작업 없음");
+                    prodView.displayResult(ok, ok ? "생산 완료 처리 (CONFIRMED 전환)" : "생산 중인 작업 없음");
                     break;
                 }
                 case ProductionMenuChoice::BACK:
