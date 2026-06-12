@@ -153,6 +153,7 @@
 
   <!-- Source files -->
   <ItemGroup>
+    <None Include="dummydata_generator.cpp" />
     <ClCompile Include="main.cpp" />
     <!-- data -->
     <ClCompile Include="data\SampleJsonRepository.cpp" />

@@ -41,6 +41,9 @@
 
   <!-- Source files -->
   <ItemGroup>
+    <None Include="dummydata_generator.cpp">
+      <Filter>소스 파일</Filter>
+    </None>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
