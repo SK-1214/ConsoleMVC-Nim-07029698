@@ -1,17 +1,20 @@
 #pragma once
 #include <vector>
 #include <optional>
+#include <string>
 #include "Order.h"
+#include "data/OrderJsonRepository.h"
 
 class OrderRepository {
 public:
-    int add(const Order& order);                                // returns assigned id
+    explicit OrderRepository(const std::string& dir = "producedata");
+
+    int add(const Order& order);
     std::optional<Order> findById(int orderId) const;
     std::vector<Order> getAll() const;
     std::vector<Order> getByStatus(OrderStatus status) const;
     bool updateStatus(int orderId, OrderStatus status);
 
 private:
-    std::vector<Order> orders_;
-    int nextId_ = 1;
+    OrderJsonRepository json_;
 };

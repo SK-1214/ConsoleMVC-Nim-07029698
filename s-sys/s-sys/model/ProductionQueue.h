@@ -3,16 +3,13 @@
 #include <queue>
 #include <vector>
 #include <optional>
-
-struct ProductionJob {
-    int         orderId;
-    std::string sampleId;
-    int         actualQty;   // ceil(shortage / (yield * 0.9))
-    int         totalTime;   // avgProductionTime * actualQty
-};
+#include "model/ProductionJob.h"
+#include "data/ProductionQueueJsonRepository.h"
 
 class ProductionQueue {
 public:
+    explicit ProductionQueue(const std::string& dir = "producedata");
+
     void enqueue(const ProductionJob& job);
     std::optional<ProductionJob> front() const;
     void dequeue();
@@ -21,5 +18,8 @@ public:
     std::vector<ProductionJob> getWaiting() const;  // all jobs except the front
 
 private:
-    std::queue<ProductionJob> queue_;
+    ProductionQueueJsonRepository json_;
+    std::queue<ProductionJob>     queue_;
+
+    void persist() const;
 };

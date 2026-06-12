@@ -2,6 +2,7 @@
 #include <chrono>
 #include <optional>
 #include <vector>
+#include "model/ProductionJob.h"
 #include "model/ProductionQueue.h"
 #include "model/OrderRepository.h"
 #include "model/SampleRepository.h"
