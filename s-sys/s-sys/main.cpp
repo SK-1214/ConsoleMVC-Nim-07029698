@@ -1,172 +1,155 @@
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 #include <string>
+#include <vector>
+#include <random>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
 #include <windows.h>
+#include "nlohmann/json.hpp"
 
-#include "model/SampleRepository.h"
-#include "model/OrderRepository.h"
-#include "model/ProductionQueue.h"
+namespace fs = std::filesystem;
+using json = nlohmann::json;
 
-#include "controller/SampleController.h"
-#include "controller/OrderController.h"
-#include "controller/MonitorController.h"
-#include "controller/ProductionController.h"
-#include "controller/ShipmentController.h"
+// ─── 반도체 생산라인 시료 이름 풀 ────────────────────────────────────────────
 
-#include "view/MainView.h"
-#include "view/SampleView.h"
-#include "view/OrderView.h"
-#include "view/MonitorView.h"
-#include "view/ProductionView.h"
-#include "view/ShipmentView.h"
+static const std::vector<std::string> MATERIAL_NAMES = {
+    "실리콘 웨이퍼 8인치",
+    "실리콘 웨이퍼 12인치",
+    "실리콘 웨이퍼 6인치",
+    "SOI 웨이퍼 12인치",
+    "에피택셜 실리콘 웨이퍼 12인치",
+    "GAA 공정 웨이퍼 12인치",
+    "FinFET 공정 웨이퍼 12인치",
+    "EUV 노광 웨이퍼 12인치",
+    "3nm 공정 웨이퍼 12인치",
+    "5nm 공정 웨이퍼 12인치",
+    "7nm 공정 웨이퍼 12인치",
+    "DRAM DDR5 웨이퍼 12인치",
+    "LPDDR5 모바일 DRAM 웨이퍼 12인치",
+    "NAND Flash 176단 웨이퍼 12인치",
+    "NAND Flash 238단 웨이퍼 12인치",
+    "HBM3 웨이퍼 12인치",
+    "HBM3E 웨이퍼 12인치",
+    "SiC 파워 웨이퍼 6인치",
+    "SiC 파워 웨이퍼 8인치",
+    "GaN-on-Si 파워 웨이퍼 8인치",
+    "고전압 MOSFET 웨이퍼 8인치",
+    "IGBT 파워 모듈 웨이퍼 8인치",
+    "GaAs RF 웨이퍼 6인치",
+    "InP 고속 소자 웨이퍼 4인치",
+    "GaN RF 웨이퍼 6인치",
+    "AlGaN/GaN HEMT 웨이퍼 6인치",
+    "CIS 이미지센서 웨이퍼 8인치",
+    "ToF 센서 웨이퍼 8인치",
+    "InGaAs 적외선 센서 웨이퍼 4인치",
+    "VCSEL 레이저 웨이퍼 6인치",
+    "모바일 AP 웨이퍼 12인치",
+    "AI 가속기 웨이퍼 12인치",
+    "자동차용 MCU 웨이퍼 8인치",
+    "BCD 아날로그 혼성신호 웨이퍼 8인치",
+    "eFlash MCU 웨이퍼 8인치",
+    "TSV 인터포저 웨이퍼 12인치",
+    "Fan-out WLP 웨이퍼 12인치",
+    "2.5D 칩렛 인터포저 웨이퍼 12인치",
+    "OLED 드라이버 IC 웨이퍼 8인치",
+    "AMOLED DDI 웨이퍼 8인치",
+    "MEMS 압력센서 웨이퍼 8인치",
+    "RF CMOS 웨이퍼 12인치",
+    "BiCMOS SiGe 웨이퍼 8인치",
+    "고저항 실리콘 RF 웨이퍼 12인치",
+    "FD-SOI 28nm 웨이퍼 12인치",
+    "질화갈륨 LED 웨이퍼 4인치",
+    "마이크로 LED 웨이퍼 6인치",
+    "SiPh 실리콘 포토닉스 웨이퍼 12인치",
+    "양자점 QD-LED 웨이퍼 8인치",
+    "Ga2O3 차세대 파워 웨이퍼 4인치"
+};
+
+// ─── 유틸리티 ─────────────────────────────────────────────────────────────────
+
+static std::string makeId(int index) {
+    std::ostringstream oss;
+    oss << "S" << std::setw(3) << std::setfill('0') << index;
+    return oss.str();
+}
+
+static std::string makeSafeFilename(const std::string& id, const std::string& name) {
+    std::string safe = name;
+    for (char& c : safe) {
+        if (c == ' ' || c == '/' || c == '\\' || c == ':' ||
+            c == '*' || c == '?' || c == '"' || c == '<' ||
+            c == '>' || c == '|')
+            c = '_';
+    }
+    return id + "_" + safe + ".json";
+}
+
+// ─── 메인 ─────────────────────────────────────────────────────────────────────
 
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 
-    // --- Model ---
-    SampleRepository sampleRepo;
-    OrderRepository  orderRepo;
-    ProductionQueue  productionQueue;
+    std::cout << "========================================\n";
+    std::cout << "  S-Semi 더미 데이터 생성기\n";
+    std::cout << "========================================\n";
+    std::cout << "생성할 시료 데이터 개수를 입력하세요: ";
 
-    // --- Controller ---
-    SampleController    sampleCtrl(sampleRepo);
-    OrderController     orderCtrl(orderRepo, sampleRepo, productionQueue);
-    MonitorController   monitorCtrl(orderRepo, sampleRepo);
-    ProductionController prodCtrl(productionQueue, orderRepo, sampleRepo);
-    ShipmentController  shipCtrl(orderRepo);
+    int count = 0;
+    std::cin >> count;
 
-    // --- View ---
-    MainView       mainView;
-    SampleView     sampleView;
-    OrderView      orderView;
-    MonitorView    monitorView;
-    ProductionView prodView;
-    ShipmentView   shipView;
-
-    bool running = true;
-    while (running) {
-        mainView.displayMenu();
-        switch (mainView.getChoice()) {
-
-        // ── 1. 시료 관리 ─────────────────────────────────────────
-        case MainMenuChoice::SAMPLE_MANAGEMENT: {
-            bool inMenu = true;
-            while (inMenu) {
-                sampleView.displayMenu();
-                switch (sampleView.getChoice()) {
-                case SampleMenuChoice::REGISTER: {
-                    auto s  = sampleView.inputSampleData();
-                    bool ok = sampleCtrl.registerSample(s.id, s.name,
-                                                        s.avgProductionTime, s.yield);
-                    sampleView.displayResult(ok, ok ? "등록 완료" : "등록 실패 (중복 ID 또는 잘못된 값)");
-                    break;
-                }
-                case SampleMenuChoice::LIST:
-                    sampleView.displaySamples(sampleCtrl.getAllSamples());
-                    break;
-                case SampleMenuChoice::SEARCH: {
-                    auto name = sampleView.inputSearchName();
-                    sampleView.displaySamples(sampleCtrl.searchByName(name));
-                    break;
-                }
-                case SampleMenuChoice::BACK:
-                    inMenu = false;
-                    break;
-                }
-            }
-            break;
-        }
-
-        // ── 2. 주문 관리 ─────────────────────────────────────────
-        case MainMenuChoice::ORDER_MANAGEMENT: {
-            bool inMenu = true;
-            while (inMenu) {
-                orderView.displayMenu();
-                switch (orderView.getChoice()) {
-                case OrderMenuChoice::PLACE: {
-                    auto input = orderView.inputOrderData();
-                    int  id    = orderCtrl.placeOrder(input.sampleId,
-                                                       input.customerName, input.quantity);
-                    orderView.displayResult(id > 0,
-                        id > 0 ? "주문 접수 완료 (주문 ID: " + std::to_string(id) + ")"
-                               : "주문 실패 (미등록 시료 또는 잘못된 수량)");
-                    break;
-                }
-                case OrderMenuChoice::APPROVE_REJECT: {
-                    orderView.displayOrders(orderCtrl.getReservedOrders());
-                    int orderId = orderView.inputOrderId();
-                    switch (orderView.getApproveRejectChoice()) {
-                    case ApproveRejectChoice::APPROVE: {
-                        bool ok = orderCtrl.approveOrder(orderId);
-                        orderView.displayResult(ok, ok ? "주문 승인 완료" : "승인 실패");
-                        break;
-                    }
-                    case ApproveRejectChoice::REJECT: {
-                        bool ok = orderCtrl.rejectOrder(orderId);
-                        orderView.displayResult(ok, ok ? "주문 거절 완료" : "거절 실패");
-                        break;
-                    }
-                    case ApproveRejectChoice::BACK:
-                        break;
-                    }
-                    break;
-                }
-                case OrderMenuChoice::BACK:
-                    inMenu = false;
-                    break;
-                }
-            }
-            break;
-        }
-
-        // ── 3. 모니터링 ──────────────────────────────────────────
-        case MainMenuChoice::MONITORING: {
-            for (auto status : { OrderStatus::RESERVED, OrderStatus::CONFIRMED,
-                                  OrderStatus::PRODUCING, OrderStatus::RELEASE }) {
-                monitorView.displayOrdersByStatus(
-                    monitorCtrl.getOrdersByStatus(status), status);
-            }
-            monitorView.displayStockInfo(monitorCtrl.getStockInfo());
-            break;
-        }
-
-        // ── 4. 출고 처리 ─────────────────────────────────────────
-        case MainMenuChoice::SHIPMENT: {
-            shipView.displayConfirmedOrders(shipCtrl.getConfirmedOrders());
-            int orderId = shipView.inputOrderId();
-            if (orderId > 0) {
-                bool ok = shipCtrl.release(orderId);
-                shipView.displayResult(ok, ok ? "출고 완료 (RELEASE)" : "출고 실패");
-            }
-            break;
-        }
-
-        // ── 5. 생산 라인 ─────────────────────────────────────────
-        case MainMenuChoice::PRODUCTION_LINE: {
-            bool inMenu = true;
-            while (inMenu) {
-                prodView.displayCurrentProduction(prodCtrl.getCurrentProduction());
-                prodView.displayWaitingQueue(prodCtrl.getWaitingJobs());
-                switch (prodView.getChoice()) {
-                case ProductionMenuChoice::COMPLETE: {
-                    bool ok = prodCtrl.completeCurrentProduction();
-                    prodView.displayResult(ok, ok ? "생산 완료 (CONFIRMED 전환)" : "생산 중인 작업 없음");
-                    break;
-                }
-                case ProductionMenuChoice::BACK:
-                    inMenu = false;
-                    break;
-                }
-            }
-            break;
-        }
-
-        // ── 0. 종료 ──────────────────────────────────────────────
-        case MainMenuChoice::EXIT:
-            std::cout << "\n시스템을 종료합니다.\n";
-            running = false;
-            break;
-        }
+    if (count <= 0) {
+        std::cerr << "오류: 1 이상의 숫자를 입력해야 합니다.\n";
+        return 1;
     }
+
+    const fs::path outDir = "dummydata";
+    fs::create_directories(outDir);
+
+    std::mt19937 rng(static_cast<unsigned>(std::time(nullptr)));
+    std::uniform_int_distribution<int>     distTime(300, 10800); // 초 (5분~3시간)
+    std::uniform_real_distribution<double> distYield(0.50, 1.00);
+    std::uniform_int_distribution<int>     distStock(0, 500);
+
+    std::cout << "\n생성 중...\n";
+
+    int generated = 0;
+    for (int i = 1; i <= count; ++i) {
+        std::string name = MATERIAL_NAMES[(i - 1) % MATERIAL_NAMES.size()];
+        int cycle = (i - 1) / static_cast<int>(MATERIAL_NAMES.size());
+        if (cycle > 0)
+            name += "-v" + std::to_string(cycle + 1);
+
+        std::string id  = makeId(i);
+        int    time     = distTime(rng);
+        double yieldVal = std::round(distYield(rng) * 100.0) / 100.0;
+        int    stock    = distStock(rng);
+
+        json j;
+        j["id"]                 = id;
+        j["name"]               = name;
+        j["avgProductionTime"]  = time;
+        j["yield"]              = yieldVal;
+        j["stock"]              = stock;
+
+        fs::path filePath = outDir / makeSafeFilename(id, name);
+        std::ofstream ofs(filePath);
+        if (!ofs.is_open()) {
+            std::cerr << "파일 열기 실패: " << filePath << "\n";
+            continue;
+        }
+        ofs << j.dump(2);
+        ofs.close();
+
+        std::cout << "[" << std::setw(3) << i << "/" << count << "] "
+                  << filePath.string() << "\n";
+        ++generated;
+    }
+
+    std::cout << "\n완료: 총 " << generated << "개의 시료 데이터가 "
+              << fs::absolute(outDir).string() << " 에 저장됐습니다.\n";
     return 0;
 }
