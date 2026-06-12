@@ -131,6 +131,9 @@ int main() {
                     }
                     break;
                 }
+                case OrderMenuChoice::STATUS:
+                    orderView.displayAllOrders(orderCtrl.getAllOrders());
+                    break;
                 case OrderMenuChoice::BACK:
                     inMenu = false;
                     break;
