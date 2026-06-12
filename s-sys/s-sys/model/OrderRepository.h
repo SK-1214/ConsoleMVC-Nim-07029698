@@ -7,7 +7,7 @@
 
 class OrderRepository {
 public:
-    explicit OrderRepository(const std::string& dir = "producedata");
+    explicit OrderRepository(const std::string& dir = "");
 
     int add(const Order& order);
     std::optional<Order> findById(int orderId) const;

@@ -128,6 +128,9 @@
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
+    <PostBuildEvent>
+      <Command>xcopy /E /I /Y "$(ProjectDir)sampledata" "$(OutDir)sampledata"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -163,6 +166,7 @@
     <ClCompile Include="testcase\TC_MonitorController_test.cpp" />
     <ClCompile Include="testcase\TC_ProductionController_test.cpp" />
     <ClCompile Include="testcase\TC_ShipmentController_test.cpp" />
+    <ClCompile Include="testcase\TC_ProduceData.cpp" />
     <!-- data -->
     <ClCompile Include="data\SampleJsonRepository.cpp" />
     <ClCompile Include="data\SampleJsonRepository_test.cpp" />

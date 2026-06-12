@@ -8,7 +8,7 @@
 
 class ProductionQueue {
 public:
-    explicit ProductionQueue(const std::string& dir = "producedata");
+    explicit ProductionQueue(const std::string& dir = "");
 
     void enqueue(const ProductionJob& job);
     std::optional<ProductionJob> front() const;

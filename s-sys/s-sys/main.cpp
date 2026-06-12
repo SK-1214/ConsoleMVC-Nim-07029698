@@ -43,8 +43,8 @@ int main() {
     SetConsoleCP(CP_UTF8);
 
     SampleRepository       sampleRepo;
-    OrderRepository        orderRepo;
-    ProductionQueue        productionQueue;
+    OrderRepository        orderRepo("producedata");
+    ProductionQueue        productionQueue("producedata");
     AutoProductionService  autoProduction(sampleRepo);
 
     SampleController     sampleCtrl(sampleRepo);

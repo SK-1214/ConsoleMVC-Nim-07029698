@@ -56,6 +56,7 @@ std::string OrderJsonRepository::filePath() const {
 void OrderJsonRepository::load() {
     orders_.clear();
     nextId_ = 1;
+    if (dir_.empty()) return;  // 인메모리 모드 (테스트 격리)
 
     fs::path fp(toWide(filePath()));
     if (!fs::exists(fp)) return;
@@ -72,6 +73,7 @@ void OrderJsonRepository::load() {
 }
 
 bool OrderJsonRepository::save() const {
+    if (dir_.empty()) return true;  // 인메모리 모드 (테스트 격리)
     fs::create_directories(fs::path(toWide(dir_)));
     std::ofstream ofs(toWide(filePath()).c_str());
     if (!ofs.is_open()) return false;

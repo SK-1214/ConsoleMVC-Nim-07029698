@@ -44,6 +44,7 @@ std::string ProductionQueueJsonRepository::filePath() const {
 
 std::vector<ProductionJob> ProductionQueueJsonRepository::loadJobs() const {
     std::vector<ProductionJob> jobs;
+    if (dir_.empty()) return jobs;  // 인메모리 모드 (테스트 격리)
     fs::path fp(toWide(filePath()));
     if (!fs::exists(fp)) return jobs;
 
@@ -60,6 +61,7 @@ std::vector<ProductionJob> ProductionQueueJsonRepository::loadJobs() const {
 }
 
 bool ProductionQueueJsonRepository::save(const std::vector<ProductionJob>& jobs) const {
+    if (dir_.empty()) return true;  // 인메모리 모드 (테스트 격리)
     fs::create_directories(fs::path(toWide(dir_)));
     std::ofstream ofs(toWide(filePath()).c_str());
     if (!ofs.is_open()) return false;
