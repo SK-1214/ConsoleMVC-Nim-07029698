@@ -1,4 +1,5 @@
 #include "controller/OrderController.h"
+#include <algorithm>
 #include <cmath>
 
 OrderController::OrderController(OrderRepository& orderRepo, SampleRepository& sampleRepo,
@@ -19,6 +20,15 @@ int OrderController::placeOrder(const std::string& sampleId,
 
 std::vector<Order> OrderController::getReservedOrders() const {
     return orderRepo_.getByStatus(OrderStatus::RESERVED);
+}
+
+std::vector<Order> OrderController::getAllOrders() const {
+    auto all = orderRepo_.getAll();
+    // REJECTED 제외
+    all.erase(std::remove_if(all.begin(), all.end(),
+        [](const Order& o){ return o.status == OrderStatus::REJECTED; }),
+        all.end());
+    return all;
 }
 
 bool OrderController::approveOrder(int orderId) {

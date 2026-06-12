@@ -51,7 +51,11 @@ s-sys/s-sys/
 │   ├── OrderController.h / OrderController.cpp
 │   ├── MonitorController.h / MonitorController.cpp
 │   └── ProductionController.h / ProductionController.cpp
-├── *_test.cpp          ← Reviewer가 작성하는 TC
+├── data/
+│   ├── SampleJsonRepository.h / SampleJsonRepository.cpp
+│   └── SampleJsonRepository_test.cpp
+├── testcase/           ← Reviewer가 작성하는 TC (신규)
+├── sampledata/         ← 시료 JSON 파일 저장 폴더
 └── main.cpp
 ```
 
@@ -68,7 +72,7 @@ s-sys/s-sys/
 - 프레임워크: **GoogleTest / GoogleMock**
 - 설치 방식: NuGet (`Microsoft.googletest.v140.windesktop.msvcstl.static.rt-static.1.8.1.8`)
 - 헤더 위치: `s-sys/packages/.../build/native/include/gtest/gtest.h`
-- 테스트 파일 패턴: `s-sys/s-sys/*_test.cpp`
+- 테스트 파일 위치: `s-sys/s-sys/testcase/*_test.cpp`
 
 ---
 

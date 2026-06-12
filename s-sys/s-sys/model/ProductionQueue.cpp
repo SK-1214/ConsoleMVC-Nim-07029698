@@ -1,7 +1,13 @@
 #include "ProductionQueue.h"
 
+ProductionQueue::ProductionQueue(const std::string& dir) : json_(dir) {
+    for (const auto& job : json_.loadJobs())
+        queue_.push(job);
+}
+
 void ProductionQueue::enqueue(const ProductionJob& job) {
     queue_.push(job);
+    persist();
 }
 
 std::optional<ProductionJob> ProductionQueue::front() const {
@@ -11,6 +17,7 @@ std::optional<ProductionJob> ProductionQueue::front() const {
 
 void ProductionQueue::dequeue() {
     if (!queue_.empty()) queue_.pop();
+    persist();
 }
 
 bool ProductionQueue::empty() const {
@@ -30,4 +37,14 @@ std::vector<ProductionJob> ProductionQueue::getWaiting() const {
         copy.pop();
     }
     return result;
+}
+
+void ProductionQueue::persist() const {
+    std::vector<ProductionJob> jobs;
+    auto copy = queue_;
+    while (!copy.empty()) {
+        jobs.push_back(copy.front());
+        copy.pop();
+    }
+    json_.save(jobs);
 }

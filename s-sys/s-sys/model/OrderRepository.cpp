@@ -1,35 +1,23 @@
 #include "OrderRepository.h"
 
+OrderRepository::OrderRepository(const std::string& dir) : json_(dir) {}
+
 int OrderRepository::add(const Order& order) {
-    Order o  = order;
-    o.id     = nextId_++;
-    orders_.push_back(o);
-    return o.id;
+    return json_.add(order);
 }
 
 std::optional<Order> OrderRepository::findById(int orderId) const {
-    for (const auto& o : orders_)
-        if (o.id == orderId) return o;
-    return std::nullopt;
+    return json_.findById(orderId);
 }
 
 std::vector<Order> OrderRepository::getAll() const {
-    return orders_;
+    return json_.getAll();
 }
 
 std::vector<Order> OrderRepository::getByStatus(OrderStatus status) const {
-    std::vector<Order> result;
-    for (const auto& o : orders_)
-        if (o.status == status) result.push_back(o);
-    return result;
+    return json_.getByStatus(status);
 }
 
 bool OrderRepository::updateStatus(int orderId, OrderStatus status) {
-    for (auto& o : orders_) {
-        if (o.id == orderId) {
-            o.status = status;
-            return true;
-        }
-    }
-    return false;
+    return json_.updateStatus(orderId, status);
 }
